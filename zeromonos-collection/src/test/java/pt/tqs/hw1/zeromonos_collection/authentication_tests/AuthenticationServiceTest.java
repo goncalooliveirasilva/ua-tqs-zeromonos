@@ -1,8 +1,11 @@
 package pt.tqs.hw1.zeromonos_collection.authentication_tests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
@@ -42,6 +45,7 @@ public class AuthenticationServiceTest {
 
     @InjectMocks
     private AuthenticationService service;
+    
 
     @Test
     @DisplayName("Test user register.")
@@ -53,9 +57,27 @@ public class AuthenticationServiceTest {
             .build();
         when(passwordEncoder.encode("pass")).thenReturn("encoded");
         when(jwtService.generateToken(any())).thenReturn("jwt-token");
+        when(userRepository.findByEmail("bob@email.com"))
+            .thenReturn(Optional.empty());
 
         AuthenticationResponse response = service.register(request);
         assertEquals("jwt-token", response.getToken());
+    }
+
+    @Test
+    void registerDuplicateEmail() {
+        RegisterRequest request = RegisterRequest.builder()
+            .name("Bob")
+            .email("bob@email.com")
+            .password("pass")
+            .build();
+
+        when(userRepository.findByEmail("bob@email.com"))
+            .thenReturn(Optional.of(User.builder().email("bob@email.com").build()));
+
+        Exception exception = assertThrows(IllegalStateException.class, () -> service.register(request));
+        assertEquals("Email already registered.", exception.getMessage());
+        verify(userRepository, never()).save(any());
     }
 
     @Test
@@ -69,6 +91,9 @@ public class AuthenticationServiceTest {
         when(authenticationManager.authenticate(any())).thenReturn(
             new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
         );
+        when(userRepository.findByEmail("bob@email.com"))
+            .thenReturn(Optional.empty());
+
         User user = User.builder()
             .email("bob@email.com")
             .password("pass")

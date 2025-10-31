@@ -23,6 +23,9 @@ public class AuthenticationService {
     private final AuthenticationManager authenticationManager;
     
     public AuthenticationResponse register(RegisterRequest request) {
+        if (repository.findByEmail(request.getEmail()).isPresent()) {
+            throw new IllegalStateException("Email already registered.");
+        }
         User user = User.builder()
             .name(request.getName())
             .email(request.getEmail())
