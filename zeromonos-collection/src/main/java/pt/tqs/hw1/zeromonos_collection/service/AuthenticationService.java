@@ -6,6 +6,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import pt.tqs.hw1.zeromonos_collection.auth.AuthenticationRequest;
 import pt.tqs.hw1.zeromonos_collection.auth.AuthenticationResponse;
 import pt.tqs.hw1.zeromonos_collection.auth.RegisterRequest;
@@ -15,6 +16,7 @@ import pt.tqs.hw1.zeromonos_collection.repository.UserRepository;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthenticationService {
 
     private final UserRepository repository;
@@ -23,7 +25,10 @@ public class AuthenticationService {
     private final AuthenticationManager authenticationManager;
     
     public AuthenticationResponse register(RegisterRequest request) {
+        log.info("Register request for email={}", request.getEmail());
+
         if (repository.findByEmail(request.getEmail()).isPresent()) {
+            log.warn("Attempted to register with existing email={}", request.getEmail());
             throw new IllegalStateException("Email already registered.");
         }
         User user = User.builder()
@@ -32,7 +37,10 @@ public class AuthenticationService {
             .password(passwordEncoder.encode(request.getPassword()))
             .role(Role.CITIZEN)
             .build();
+
         repository.save(user);
+        log.info("User registered successfully: email={}", user.getEmail());
+
         String jwtToken = jwtService.generateToken(user);
         return AuthenticationResponse.builder()
             .token(jwtToken)
@@ -40,9 +48,12 @@ public class AuthenticationService {
     }
 
     public AuthenticationResponse authenticate(AuthenticationRequest request) {
+        log.info("Authenticate request for email={}", request.getEmail());
+        
         authenticationManager.authenticate(
             new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
         );
+
         User user = repository.findByEmail(request.getEmail()).orElseThrow();
         String jwtToken = jwtService.generateToken(user);
         return AuthenticationResponse.builder()
