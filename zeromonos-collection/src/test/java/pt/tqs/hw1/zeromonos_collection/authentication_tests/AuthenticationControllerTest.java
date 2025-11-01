@@ -3,6 +3,7 @@ package pt.tqs.hw1.zeromonos_collection.authentication_tests;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -31,6 +32,7 @@ public class AuthenticationControllerTest {
     private UserRepository userRepository;
 
     @BeforeEach
+    @AfterEach
     void cleanDatabase() {
         userRepository.deleteAll();
     }
@@ -46,7 +48,8 @@ public class AuthenticationControllerTest {
 
         mockMvc.perform(post("/api/v1/auth/register")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(request)))
+            .content(objectMapper.writeValueAsString(request))
+            .queryParam("role", "STAFF"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.token").exists());
     }
@@ -62,7 +65,8 @@ public class AuthenticationControllerTest {
 
         mockMvc.perform(post("/api/v1/auth/register")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(register)))
+            .content(objectMapper.writeValueAsString(register))
+            .queryParam("role", "CITIZEN"))
             .andExpect(status().isOk());
 
         RegisterRequest login = RegisterRequest.builder()
@@ -89,12 +93,14 @@ public class AuthenticationControllerTest {
 
         mockMvc.perform(post("/api/v1/auth/register")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(register)))
+            .content(objectMapper.writeValueAsString(register))
+            .queryParam("role", "CITIZEN"))
             .andExpect(status().isOk());
 
         mockMvc.perform(post("/api/v1/auth/register")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(register)))
+            .content(objectMapper.writeValueAsString(register))
+            .queryParam("role", "CITIZEN"))
             .andExpect(status().isConflict());
         
     }

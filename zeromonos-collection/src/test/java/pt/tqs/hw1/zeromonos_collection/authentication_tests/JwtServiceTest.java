@@ -7,6 +7,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import pt.tqs.hw1.zeromonos_collection.entity.Role;
 import pt.tqs.hw1.zeromonos_collection.entity.User;
 import pt.tqs.hw1.zeromonos_collection.service.JwtService;
 
@@ -21,6 +22,7 @@ public class JwtServiceTest {
             .email("test@email.com")
             .password("pass")
             .name("name")
+            .role(Role.CITIZEN)
             .build();
         String token = service.generateToken(user);
 

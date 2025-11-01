@@ -22,6 +22,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import pt.tqs.hw1.zeromonos_collection.auth.AuthenticationRequest;
 import pt.tqs.hw1.zeromonos_collection.auth.AuthenticationResponse;
 import pt.tqs.hw1.zeromonos_collection.auth.RegisterRequest;
+import pt.tqs.hw1.zeromonos_collection.entity.Role;
 import pt.tqs.hw1.zeromonos_collection.entity.User;
 import pt.tqs.hw1.zeromonos_collection.repository.UserRepository;
 import pt.tqs.hw1.zeromonos_collection.service.AuthenticationService;
@@ -54,12 +55,13 @@ public class AuthenticationServiceTest {
             .email("bob@email.com")
             .password("pass")
             .build();
+
         when(passwordEncoder.encode("pass")).thenReturn("encoded");
         when(jwtService.generateToken(any())).thenReturn("jwt-token");
         when(userRepository.findByEmail("bob@email.com"))
             .thenReturn(Optional.empty());
 
-        AuthenticationResponse response = service.register(request);
+        AuthenticationResponse response = service.register(request, Role.CITIZEN);
         assertEquals("jwt-token", response.getToken());
     }
 
@@ -74,7 +76,7 @@ public class AuthenticationServiceTest {
         when(userRepository.findByEmail("bob@email.com"))
             .thenReturn(Optional.of(User.builder().email("bob@email.com").build()));
 
-        Exception exception = assertThrows(IllegalStateException.class, () -> service.register(request));
+        Exception exception = assertThrows(IllegalStateException.class, () -> service.register(request, Role.CITIZEN));
         assertEquals("Email already registered.", exception.getMessage());
         verify(userRepository, never()).save(any());
     }
@@ -90,6 +92,7 @@ public class AuthenticationServiceTest {
         when(authenticationManager.authenticate(any())).thenReturn(
             new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
         );
+
         when(userRepository.findByEmail("bob@email.com"))
             .thenReturn(Optional.empty());
 
@@ -98,6 +101,7 @@ public class AuthenticationServiceTest {
             .password("pass")
             .name("Bob")
             .build();
+
         when(userRepository.findByEmail("bob@email.com")).thenReturn(Optional.of(user));
         when(jwtService.generateToken(user)).thenReturn("jwt-token");
 
