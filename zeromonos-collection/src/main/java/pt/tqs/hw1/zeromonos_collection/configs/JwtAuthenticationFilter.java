@@ -1,8 +1,11 @@
 package pt.tqs.hw1.zeromonos_collection.configs;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -39,10 +42,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                     UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
                     if (jwtService.isTokenValid(jwt, userDetails)) {
+
+                        @SuppressWarnings("unchecked")
+                        List<String> roles = jwtService.extractClaim(jwt, claims -> claims.get("roles", List.class));
+                        
+                        List<SimpleGrantedAuthority> authorities = roles.stream()
+                            .map(SimpleGrantedAuthority::new)
+                            .collect(Collectors.toList());
+
                         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             userDetails,
                             null,
-                            userDetails.getAuthorities()
+                            authorities
                         );
                         authToken.setDetails(
                             new WebAuthenticationDetailsSource().buildDetails(request)

@@ -5,12 +5,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import lombok.RequiredArgsConstructor;
 import pt.tqs.hw1.zeromonos_collection.auth.AuthenticationRequest;
 import pt.tqs.hw1.zeromonos_collection.auth.AuthenticationResponse;
 import pt.tqs.hw1.zeromonos_collection.auth.RegisterRequest;
+import pt.tqs.hw1.zeromonos_collection.entity.Role;
 import pt.tqs.hw1.zeromonos_collection.service.AuthenticationService;
 
 @RestController
@@ -21,9 +23,11 @@ public class AuthenticationController {
     private final AuthenticationService service;
 
     @PostMapping("/register")
-    public ResponseEntity<AuthenticationResponse> register(@RequestBody RegisterRequest request) {
+    public ResponseEntity<AuthenticationResponse> register(
+        @RequestBody RegisterRequest request,
+        @RequestParam Role role) {
         try {
-            return ResponseEntity.ok(service.register(request));
+            return ResponseEntity.ok(service.register(request, role));
         } catch (IllegalStateException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(null);
         }

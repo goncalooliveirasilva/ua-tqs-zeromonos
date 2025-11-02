@@ -1,9 +1,11 @@
 package pt.tqs.hw1.zeromonos_collection.controllers;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 import lombok.RequiredArgsConstructor;
 import pt.tqs.hw1.zeromonos_collection.entity.Booking;
 import pt.tqs.hw1.zeromonos_collection.entity.BookingRequest;
+import pt.tqs.hw1.zeromonos_collection.entity.BookingStateHistory;
 import pt.tqs.hw1.zeromonos_collection.entity.BookingStateUpdateRequest;
 import pt.tqs.hw1.zeromonos_collection.service.BookingsService;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -44,13 +47,9 @@ public class BookingsController {
     @PreAuthorize("hasRole('CITIZEN')")
     @PostMapping
     public ResponseEntity<Booking> createBooking(@RequestBody BookingRequest request, Authentication authentication) {
-        try {
-            String userEmail = authentication.getName();
-            Booking booking = bookingsService.createBooking(request, userEmail);
-            return ResponseEntity.status(HttpStatus.CREATED).body(booking);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        }
+        String userEmail = authentication.getName();
+        Booking booking = bookingsService.createBooking(request, userEmail);
+        return ResponseEntity.status(HttpStatus.CREATED).body(booking);
     }
 
     @PreAuthorize("hasRole('CITIZEN')")
@@ -64,12 +63,8 @@ public class BookingsController {
     @PreAuthorize("hasRole('CITIZEN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<?> cancelBooking(@PathVariable Long id) {
-        try {
-            Booking canceled = bookingsService.cancelBooking(id);
-            return ResponseEntity.ok(canceled);
-        } catch (NoSuchElementException e) {
-            return ResponseEntity.notFound().build();
-        }
+        Booking canceled = bookingsService.cancelBooking(id);
+        return ResponseEntity.ok(canceled);
     }
 
     @PreAuthorize("hasRole('STAFF')")
@@ -81,24 +76,32 @@ public class BookingsController {
 
     @PreAuthorize("hasRole('CITIZEN') or hasRole('STAFF')")
     @GetMapping("/{id}")
-    public ResponseEntity<Booking> getBookingDetails(@RequestParam Long id) {
-        try {
-            Booking booking = bookingsService.getById(id);
-            return ResponseEntity.ok(booking);
-        } catch (NoSuchElementException e) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<Booking> getBookingDetails(@PathVariable Long id) {
+        Booking booking = bookingsService.getById(id);
+        return ResponseEntity.ok(booking);
     }
 
+    @PreAuthorize("hasRole('STAFF')")
     @PutMapping("/{id}/state")
-    public ResponseEntity<Booking> updateBookingState(@PathVariable Long id, @RequestBody BookingStateUpdateRequest request) {
-        try {
-            Booking updated = bookingsService.updateState(id, request.getState());
-            return ResponseEntity.ok(updated);
-        } catch (NoSuchElementException e) {
-            return ResponseEntity.notFound().build();
-        }
-    }   
+    public ResponseEntity<Booking> updateBookingState(@PathVariable Long id, @RequestBody BookingStateUpdateRequest request, Authentication authentication) {
+        String userEmail = authentication.getName();
+        Booking updated = bookingsService.updateState(id, request.getState(), userEmail);
+        return ResponseEntity.ok(updated);
+    }
 
+    @PreAuthorize("hasRole('CITIZEN') or hasRole('STAFF')")
+    @GetMapping("/{id}/history")
+    public ResponseEntity<List<BookingStateHistory>> getBookingHistory(@PathVariable Long id) {
+        return ResponseEntity.ok(bookingsService.getHistoryForBooking(id));
+    }
 
+    @PreAuthorize("hasRole('CITIZEN') or hasRole('STAFF')")
+    @GetMapping("/available-times")
+    public ResponseEntity<List<LocalTime>> getAvailableTimes(
+        @RequestParam String municipality,
+        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
+    ) {
+        List<LocalTime> available = bookingsService.getAvailableTimes(municipality, date);
+        return ResponseEntity.ok(available);
+    }
 }

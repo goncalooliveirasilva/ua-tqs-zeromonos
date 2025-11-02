@@ -24,22 +24,23 @@ public class AuthenticationService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     
-    public AuthenticationResponse register(RegisterRequest request) {
-        log.info("Register request for email={}", request.getEmail());
+    public AuthenticationResponse register(RegisterRequest request, Role role) {
+        log.info("Register request for email={} with role={}", request.getEmail(), role);
 
         if (repository.findByEmail(request.getEmail()).isPresent()) {
             log.warn("Attempted to register with existing email={}", request.getEmail());
             throw new IllegalStateException("Email already registered.");
         }
+
         User user = User.builder()
             .name(request.getName())
             .email(request.getEmail())
             .password(passwordEncoder.encode(request.getPassword()))
-            .role(Role.CITIZEN)
+            .role(role)
             .build();
 
         repository.save(user);
-        log.info("User registered successfully: email={}", user.getEmail());
+        log.info("User registered successfully: email={}, role={}", user.getEmail(), role);
 
         String jwtToken = jwtService.generateToken(user);
         return AuthenticationResponse.builder()
