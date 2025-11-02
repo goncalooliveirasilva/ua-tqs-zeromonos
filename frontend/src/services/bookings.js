@@ -2,7 +2,6 @@ import axios from 'axios'
 
 const BASE_URL = 'http://localhost:8080/api/v1/bookings'
 
-// Helper to get auth headers
 const getAuthHeaders = () => {
   const token = localStorage.getItem('token')
   if (!token) {
@@ -12,7 +11,6 @@ const getAuthHeaders = () => {
   return { Authorization: `Bearer ${token}` }
 }
 
-// Get booking by token (no login required)
 export const getBookingByToken = async (token) => {
   const res = await axios.get(`${BASE_URL}/public/${token}`)
   return res.data
@@ -25,11 +23,9 @@ export const createBooking = async (bookingRequest) => {
   return res.data
 }
 
-// Get all bookings for logged-in citizen
 export const getMyBookings = async () => {
   const res = await axios.get(`${BASE_URL}/me`, {
     headers: getAuthHeaders(),
-    withCredentials: true,
   })
   return res.data
 }
@@ -49,7 +45,6 @@ export const getAvailableTimes = async (municipality, date) => {
   return res.data
 }
 
-// Get all bookings (staff only)
 export const getAllBookings = async () => {
   const res = await axios.get(BASE_URL, {
     headers: getAuthHeaders(),
@@ -64,7 +59,6 @@ export const getBookingDetails = async (id) => {
   return res.data
 }
 
-// Update booking state (staff only)
 export const updateBookingState = async (id, newState) => {
   const res = await axios.put(
     `${BASE_URL}/${id}/state`,
@@ -74,9 +68,22 @@ export const updateBookingState = async (id, newState) => {
   return res.data
 }
 
-// Get booking history
 export const getBookingHistory = async (id) => {
   const res = await axios.get(`${BASE_URL}/${id}/history`, {
+    headers: getAuthHeaders(),
+  })
+  return res.data
+}
+
+export const getBookingsByMunicipality = async (municipality) => {
+  const res = await axios.get(`${BASE_URL}/municipality/${municipality}`, {
+    headers: getAuthHeaders(),
+  })
+  return res.data
+}
+
+export const getBookingsByDistrict = async (district) => {
+  const res = await axios.get(`${BASE_URL}/district/${district}`, {
     headers: getAuthHeaders(),
   })
   return res.data

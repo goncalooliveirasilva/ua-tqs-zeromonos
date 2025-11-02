@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import {
   Container,
@@ -13,7 +14,9 @@ import {
   MenuItem,
   Box,
   Alert,
-  Stack,
+  Paper,
+  Chip,
+  CircularProgress,
 } from '@mui/material'
 import {
   getMyBookings,
@@ -23,9 +26,12 @@ import {
 } from '../services/bookings'
 
 const CitizenDashboard = () => {
+  const navigate = useNavigate()
   const [bookings, setBookings] = useState([])
+  const [districts, setDistricts] = useState([])
   const [municipalities, setMunicipalities] = useState([])
   const [villages, setVillages] = useState([])
+  const [district, setDistrict] = useState('')
   const [municipality, setMunicipality] = useState('')
   const [village, setVillage] = useState('')
   const [postalCode, setPostalCode] = useState('')
@@ -34,10 +40,19 @@ const CitizenDashboard = () => {
   const [description, setDescription] = useState('')
   const [availableTimes, setAvailableTimes] = useState([])
   const [lastBookingToken, setLastBookingToken] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
 
   useEffect(() => {
+    const token = localStorage.getItem('token')
+    if (!token) {
+      navigate('/login')
+      return
+    }
     fetchBookings()
-    fetchMunicipalities()
+    fetchDistricts()
+    fetchAllMunicipalities()
   }, [])
 
   const fetchBookings = async () => {
@@ -46,16 +61,33 @@ const CitizenDashboard = () => {
       setBookings(data)
     } catch (err) {
       console.error('Error fetching bookings:', err)
+      if (err.response?.status === 403) navigate('/login')
     }
   }
 
-  const fetchMunicipalities = async () => {
+  const fetchDistricts = async () => {
+    try {
+      const res = await axios.get('https://json.geoapi.pt/distritos')
+      const districtNames = res.data.map((d) =>
+        typeof d === 'string' ? d : d.distrito || d.nome || d,
+      )
+      setDistricts(districtNames.sort())
+    } catch (err) {
+      console.error('Error fetching districts:', err)
+      setError('Could not load districts')
+    }
+  }
+
+  const fetchAllMunicipalities = async () => {
     try {
       const res = await axios.get('https://json.geoapi.pt/municipios')
-      console.log(res)
-      setMunicipalities(res.data)
+      const muniNames = res.data.map((m) =>
+        typeof m === 'string' ? m : m.municipio || m.nome || m,
+      )
+      setMunicipalities(muniNames.sort())
     } catch (err) {
       console.error('Error fetching municipalities:', err)
+      setError('Could not load municipalities')
     }
   }
 
@@ -65,33 +97,51 @@ const CitizenDashboard = () => {
       const res = await axios.get(
         `https://json.geoapi.pt/municipio/${muni}/freguesias`,
       )
-      console.log(res)
-      setVillages(res.data.freguesias)
+      setVillages(res.data.freguesias || [])
     } catch (err) {
       console.error('Error fetching villages:', err)
+      setError('Could not load villages for this municipality')
+      setVillages([])
     }
   }
 
   const fetchAvailableTimes = async () => {
     if (!municipality || !date) return
-    const times = await getAvailableTimes(municipality, date)
-    setAvailableTimes(times)
+    try {
+      const times = await getAvailableTimes(municipality, date)
+      setAvailableTimes(times)
+      if (times.length === 0)
+        setError(
+          'No available times for this date. Please select another date.',
+        )
+    } catch (err) {
+      console.error('Error fetching available times:', err)
+      setError('Could not fetch available times')
+    }
   }
 
   const handleCreateBooking = async (e) => {
     e.preventDefault()
     if (
+      !district ||
       !municipality ||
       !village ||
       !postalCode ||
       !date ||
       !time ||
       !description
-    )
+    ) {
+      setError('Please fill in all fields')
       return
+    }
+
+    setLoading(true)
+    setError('')
+    setSuccess('')
 
     try {
       const response = await createBooking({
+        district,
         municipality,
         village,
         postalCode,
@@ -99,9 +149,10 @@ const CitizenDashboard = () => {
         time,
         description,
       })
-
       setLastBookingToken(response.token)
+      setSuccess('Booking created successfully!')
 
+      setDistrict('')
       setMunicipality('')
       setVillage('')
       setPostalCode('')
@@ -110,171 +161,329 @@ const CitizenDashboard = () => {
       setDescription('')
       setAvailableTimes([])
       setVillages([])
-
       fetchBookings()
     } catch (err) {
       console.error('Error creating booking:', err)
+      setError(
+        err.response?.data?.message ||
+          err.response?.data ||
+          'Error creating booking. Please try again.',
+      )
+    } finally {
+      setLoading(false)
     }
   }
 
   const handleCancelBooking = async (id) => {
+    if (!window.confirm('Are you sure you want to cancel this booking?')) return
     try {
       await cancelBooking(id)
+      setSuccess('Booking cancelled successfully!')
       fetchBookings()
     } catch (err) {
       console.error('Error canceling booking:', err)
+      setError(
+        err.response?.data?.message ||
+          err.response?.data ||
+          'Error cancelling booking',
+      )
     }
   }
 
   const copyToken = () => {
     navigator.clipboard.writeText(lastBookingToken)
+    setSuccess('Token copied to clipboard!')
+  }
+
+  const handleLogout = () => {
+    localStorage.removeItem('token')
+    localStorage.removeItem('role')
+    navigate('/login')
+  }
+
+  const getStateColor = (state) => {
+    switch (state) {
+      case 'RECEIVED':
+        return 'info'
+      case 'APPROVED':
+        return 'success'
+      case 'REJECTED':
+        return 'error'
+      case 'CANCELED':
+        return 'warning'
+      case 'COMPLETED':
+        return 'success'
+      default:
+        return 'default'
+    }
   }
 
   return (
-    <Container sx={{ mt: 4 }}>
-      <Typography variant="h4" gutterBottom>
-        My Bookings
-      </Typography>
-
-      <Table sx={{ mb: 4 }}>
-        <TableHead>
-          <TableRow>
-            <TableCell>Municipality</TableCell>
-            <TableCell>Village</TableCell>
-            <TableCell>Postal Code</TableCell>
-            <TableCell>Date</TableCell>
-            <TableCell>Time</TableCell>
-            <TableCell>Description</TableCell>
-            <TableCell>State</TableCell>
-            <TableCell>Actions</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {bookings.map((b) => (
-            <TableRow key={b.id}>
-              <TableCell>{b.municipality}</TableCell>
-              <TableCell>{b.village}</TableCell>
-              <TableCell>{b.postalCode}</TableCell>
-              <TableCell>{b.date}</TableCell>
-              <TableCell>{b.time}</TableCell>
-              <TableCell>{b.description}</TableCell>
-              <TableCell>{b.state}</TableCell>
-              <TableCell>
-                {b.state === 'RECEIVED' && (
-                  <Button
-                    color="error"
-                    variant="contained"
-                    size="small"
-                    onClick={() => handleCancelBooking(b.id)}
-                  >
-                    Cancel
-                  </Button>
-                )}
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-
-      {lastBookingToken && (
-        <Stack sx={{ mb: 4 }}>
-          <Alert severity="success">
-            Booking created! Your token is: <strong>{lastBookingToken}</strong>
-          </Alert>
-          <Button
-            variant="outlined"
-            onClick={copyToken}
-            sx={{ mt: 1, width: '200px' }}
-          >
-            Copy Token
-          </Button>
-        </Stack>
-      )}
-
-      <Typography variant="h5" gutterBottom>
-        Create a Booking
-      </Typography>
-
+    <Container sx={{ mt: 4, mb: 4 }}>
       <Box
-        component="form"
-        onSubmit={handleCreateBooking}
-        sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 4 }}
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          mb: 4,
+        }}
       >
-        <TextField
-          select
-          label="Municipality"
-          value={municipality}
-          onChange={(e) => {
-            setMunicipality(e.target.value)
-            setVillage('')
-            fetchVillages(e.target.value)
-          }}
-          required
-        >
-          {municipalities.map((m) => (
-            <MenuItem key={m} value={m}>
-              {m}
-            </MenuItem>
-          ))}
-        </TextField>
-
-        <TextField
-          select
-          label="Village"
-          value={village}
-          onChange={(e) => setVillage(e.target.value)}
-          required
-          disabled={!municipality}
-        >
-          {villages.map((v) => (
-            <MenuItem key={v} value={v}>
-              {v}
-            </MenuItem>
-          ))}
-        </TextField>
-
-        <TextField
-          label="Postal Code"
-          value={postalCode}
-          onChange={(e) => setPostalCode(e.target.value)}
-          required
-        />
-
-        <TextField
-          type="date"
-          label="Date"
-          InputLabelProps={{ shrink: true }}
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          onBlur={fetchAvailableTimes}
-          required
-        />
-
-        <TextField
-          select
-          label="Time"
-          value={time}
-          onChange={(e) => setTime(e.target.value)}
-          required
-        >
-          {availableTimes.map((t) => (
-            <MenuItem key={t} value={t}>
-              {t}
-            </MenuItem>
-          ))}
-        </TextField>
-
-        <TextField
-          label="Description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          required
-        />
-
-        <Button type="submit" variant="contained">
-          Create Booking
+        <Typography variant="h4">Citizen Dashboard</Typography>
+        <Button variant="outlined" color="error" onClick={handleLogout}>
+          Logout
         </Button>
       </Box>
+
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>
+          {error}
+        </Alert>
+      )}
+
+      {success && (
+        <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccess('')}>
+          {success}
+        </Alert>
+      )}
+
+      {/* My Bookings */}
+      <Paper sx={{ p: 3, mb: 4 }}>
+        <Typography variant="h5" gutterBottom>
+          My Bookings
+        </Typography>
+        {bookings.length === 0 ? (
+          <Typography color="text.secondary" sx={{ mt: 2 }}>
+            No bookings yet. Create your first booking below!
+          </Typography>
+        ) : (
+          <Box sx={{ overflowX: 'auto' }}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>District</TableCell>
+                  <TableCell>Municipality</TableCell>
+                  <TableCell>Village</TableCell>
+                  <TableCell>Postal Code</TableCell>
+                  <TableCell>Date</TableCell>
+                  <TableCell>Time</TableCell>
+                  <TableCell>Description</TableCell>
+                  <TableCell>State</TableCell>
+                  <TableCell>Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {bookings.map((b) => (
+                  <TableRow key={b.id}>
+                    <TableCell>{b.district || '-'}</TableCell>
+                    <TableCell>{b.municipality}</TableCell>
+                    <TableCell>{b.village}</TableCell>
+                    <TableCell>{b.postalCode}</TableCell>
+                    <TableCell>
+                      {new Date(b.date).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>{b.time}</TableCell>
+                    <TableCell>
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          maxWidth: 200,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {b.description}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={b.state}
+                        color={getStateColor(b.state)}
+                        size="small"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      {b.state === 'RECEIVED' ? (
+                        <Button
+                          color="error"
+                          variant="contained"
+                          size="small"
+                          onClick={() => handleCancelBooking(b.id)}
+                        >
+                          Cancel
+                        </Button>
+                      ) : (
+                        <Typography variant="caption" color="text.secondary">
+                          Cannot cancel
+                        </Typography>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </Box>
+        )}
+      </Paper>
+
+      {/* Booking Token */}
+      {lastBookingToken && (
+        <Paper sx={{ p: 3, mb: 4, bgcolor: 'success.light' }}>
+          <Alert severity="success" sx={{ mb: 2 }}>
+            <Typography variant="h6" gutterBottom>
+              Booking Created Successfully!
+            </Typography>
+            <Typography variant="body2" gutterBottom>
+              Your booking token is: <strong>{lastBookingToken}</strong>
+            </Typography>
+            <Typography variant="caption">
+              Save this token to check your booking status without logging in.
+            </Typography>
+          </Alert>
+          <Button variant="contained" onClick={copyToken}>
+            Copy Token
+          </Button>
+        </Paper>
+      )}
+
+      {/* Create Booking Form */}
+      <Paper sx={{ p: 3 }}>
+        <Typography variant="h5" gutterBottom>
+          Create a New Booking
+        </Typography>
+        <Box
+          component="form"
+          onSubmit={handleCreateBooking}
+          sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}
+        >
+          <TextField
+            select
+            label="District"
+            value={district}
+            onChange={(e) => setDistrict(e.target.value)}
+            required
+            helperText="Select your district"
+          >
+            {districts.map((d) => (
+              <MenuItem key={d} value={d}>
+                {d}
+              </MenuItem>
+            ))}
+          </TextField>
+
+          <TextField
+            select
+            label="Municipality"
+            value={municipality}
+            onChange={(e) => {
+              setMunicipality(e.target.value)
+              setVillage('')
+              setAvailableTimes([])
+              setVillages([])
+              fetchVillages(e.target.value)
+            }}
+            required
+            helperText="Select your municipality"
+          >
+            {municipalities.map((m) => (
+              <MenuItem key={m} value={m}>
+                {m}
+              </MenuItem>
+            ))}
+          </TextField>
+
+          <TextField
+            select
+            label="Village (Freguesia)"
+            value={village}
+            onChange={(e) => setVillage(e.target.value)}
+            required
+            disabled={!municipality || villages.length === 0}
+            helperText={
+              !municipality
+                ? 'Select a municipality first'
+                : villages.length === 0
+                  ? 'Loading villages...'
+                  : 'Select your village'
+            }
+          >
+            {villages.map((v) => (
+              <MenuItem key={v} value={v}>
+                {v}
+              </MenuItem>
+            ))}
+          </TextField>
+
+          <TextField
+            label="Postal Code"
+            placeholder="0000-000"
+            value={postalCode}
+            onChange={(e) => setPostalCode(e.target.value)}
+            required
+          />
+
+          <TextField
+            type="date"
+            label="Date"
+            InputLabelProps={{ shrink: true }}
+            value={date}
+            onChange={(e) => {
+              setDate(e.target.value)
+              setTime('')
+              setAvailableTimes([])
+            }}
+            onBlur={fetchAvailableTimes}
+            inputProps={{
+              min: new Date().toISOString().split('T')[0],
+            }}
+            required
+            helperText="Select a date to see available times"
+          />
+
+          <TextField
+            select
+            label="Time"
+            value={time}
+            onChange={(e) => setTime(e.target.value)}
+            required
+            disabled={availableTimes.length === 0}
+            helperText={
+              !date
+                ? 'Select a date first'
+                : availableTimes.length === 0
+                  ? 'No available times for this date'
+                  : 'Select your preferred time'
+            }
+          >
+            {availableTimes.map((t) => (
+              <MenuItem key={t} value={t}>
+                {t}
+              </MenuItem>
+            ))}
+          </TextField>
+
+          <TextField
+            label="Description"
+            multiline
+            rows={3}
+            placeholder="Describe the items you want to collect..."
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            required
+            helperText="Provide details about what needs to be collected"
+          />
+
+          <Button
+            type="submit"
+            variant="contained"
+            size="large"
+            disabled={loading || availableTimes.length === 0}
+            startIcon={loading && <CircularProgress size={20} />}
+          >
+            {loading ? 'Creating...' : 'Create Booking'}
+          </Button>
+        </Box>
+      </Paper>
     </Container>
   )
 }
