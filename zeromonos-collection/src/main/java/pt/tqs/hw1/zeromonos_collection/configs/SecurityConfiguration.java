@@ -1,5 +1,6 @@
 package pt.tqs.hw1.zeromonos_collection.configs;
 
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -27,6 +28,7 @@ public class SecurityConfiguration {
         // (paths where we need a token and where we don't)
         http
             .csrf(csrf -> csrf.disable())
+            .cors(cors -> {})
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/v1/auth/**", "/api/v1/bookings/public/**").permitAll()
                 .anyRequest().authenticated())
