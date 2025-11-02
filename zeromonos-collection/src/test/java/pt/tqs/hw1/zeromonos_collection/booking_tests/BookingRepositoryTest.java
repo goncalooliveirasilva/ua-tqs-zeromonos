@@ -28,6 +28,8 @@ public class BookingRepositoryTest {
 
         bookingRepository.save(Booking.builder()
             .municipality("Lisbon")
+            .village("Sintra")
+            .postalCode("1111-111")
             .date(date)
             .time(LocalTime.now())
             .description("item 1")
@@ -38,6 +40,8 @@ public class BookingRepositoryTest {
 
         bookingRepository.save(Booking.builder()
             .municipality("Lisbon")
+            .village("Sintra")
+            .postalCode("0000-000")
             .date(date)
             .time(LocalTime.now())
             .description("item 2")

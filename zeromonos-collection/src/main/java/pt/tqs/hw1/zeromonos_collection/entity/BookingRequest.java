@@ -14,6 +14,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class BookingRequest {
     private String municipality;
+    private String village;
+    private String postalCode;
     private LocalDate date;
     private LocalTime time;
     private String description;

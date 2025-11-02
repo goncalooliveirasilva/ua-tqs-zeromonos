@@ -32,6 +32,12 @@ public class Booking {
     private String municipality;
 
     @Column(nullable = false)
+    private String village;
+
+    @Column(nullable = false)
+    private String postalCode;
+
+    @Column(nullable = false)
     @Temporal(TemporalType.DATE)
     private LocalDate date;
 

@@ -62,6 +62,8 @@ public class BookingsControllerTest {
         b = bookingRepository.save(
             Booking.builder()
                 .municipality("Lisbon")
+                .village("Sintra")
+                .postalCode("0000-000")
                 .date(futureDate)
                 .time(LocalTime.of(16, 0))
                 .description("item 1")
@@ -88,6 +90,8 @@ public class BookingsControllerTest {
         Booking booking = bookingRepository.save(
             Booking.builder()
                 .municipality("Lisbon")
+                .village("Sintra")
+                .postalCode("0000-000")
                 .date(futureDate)
                 .time(LocalTime.of(10, 0))
                 .description("item 1")
@@ -116,6 +120,8 @@ public class BookingsControllerTest {
     void testCreateBooking() throws Exception {
         BookingRequest request = BookingRequest.builder()
             .municipality("Lisbon")
+            .village("Sintra")
+            .postalCode("0000-000")
             .date(futureDate)
             .time(LocalTime.of(10, 0))
             .description("item 1")
@@ -135,6 +141,8 @@ public class BookingsControllerTest {
     void testStaffCreateBooking() throws Exception {
         BookingRequest request = BookingRequest.builder()
             .municipality("Lisbon")
+            .village("Sintra")
+            .postalCode("0000-000")
             .date(futureDate)
             .time(LocalTime.of(10, 0))
             .description("item 1")
@@ -154,6 +162,8 @@ public class BookingsControllerTest {
         bookingRepository.save(
             Booking.builder()
                 .municipality("Porto")
+                .village("Sintra")
+                .postalCode("0000-000")
                 .date(LocalDate.now().plusDays(1))
                 .time(LocalTime.of(14, 0))
                 .description("item 1")
@@ -184,6 +194,8 @@ public class BookingsControllerTest {
         Booking booking = bookingRepository.save(
             Booking.builder()
                 .municipality("Lisbon")
+                .village("Sintra")
+                .postalCode("0000-000")
                 .date(futureDate)
                 .time(LocalTime.of(9, 0))
                 .description("item 1")

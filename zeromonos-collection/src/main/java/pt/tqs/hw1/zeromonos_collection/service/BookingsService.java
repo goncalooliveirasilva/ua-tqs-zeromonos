@@ -68,6 +68,8 @@ public class BookingsService {
 
         Booking booking = Booking.builder()
             .municipality(request.getMunicipality())
+            .village(request.getVillage())
+            .postalCode(request.getPostalCode())
             .date(request.getDate())
             .description(request.getDescription())
             .time(request.getTime())
