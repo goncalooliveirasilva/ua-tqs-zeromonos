@@ -18,4 +18,5 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     Long countByMunicipalityAndDate(@Param("municipality") String municipality, @Param("date") LocalDate date);
 
     List<Booking> findByMunicipalityAndDate(String municipality, LocalDate date);
+    List<Booking> findByMunicipality(String municipality);
 }

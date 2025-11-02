@@ -293,4 +293,44 @@ public class BookingsControllerTest {
             .andExpect(jsonPath("$").isArray());
     }
 
+    @Test
+    @WithMockUser(username = "staff@email.com", roles = {"STAFF"})
+    @DisplayName("GET /api/v1/bookings/municipality/{municipality} returns bookings for staff")
+    void testGetBookingsByMunicipality() throws Exception {
+        bookingRepository.save(
+            Booking.builder()
+                .municipality("Lisbon")
+                .village("Cascais")
+                .postalCode("1111-111")
+                .date(futureDate.plusDays(1))
+                .time(LocalTime.of(10, 0))
+                .description("item 2")
+                .state(State.ASSIGNED)
+                .token("tok2")
+                .createdBy("alice@email.com")
+                .build()
+        );
+        
+        mockMvc.perform(get("/api/v1/bookings/municipality/{municipality}", "Lisbon"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$").isArray())
+            .andExpect(jsonPath("$.length()").value(2))
+            .andExpect(jsonPath("$[0].municipality").value("Lisbon"))
+            .andExpect(jsonPath("$[1].municipality").value("Lisbon"));
+    }
+
+    @Test
+    @WithMockUser(username = "citizen@email.com", roles = {"CITIZEN"})
+    @DisplayName("GET /api/v1/bookings/municipality/{municipality} returns 403 for citizen")
+    void testGetBookingsByMunicipalityForbiddenForCitizen() throws Exception {
+        mockMvc.perform(get("/api/v1/bookings/municipality/{municipality}", "Lisbon"))
+            .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/bookings/municipality/{municipality} returns 401 for unauthenticated users")
+    void testGetBookingsByMunicipalityUnauthorized() throws Exception {
+        mockMvc.perform(get("/api/v1/bookings/municipality/{municipality}", "Lisbon"))
+            .andExpect(status().isForbidden());
+    }
 }

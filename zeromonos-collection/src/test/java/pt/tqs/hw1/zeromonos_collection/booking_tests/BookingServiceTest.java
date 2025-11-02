@@ -7,6 +7,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import io.jsonwebtoken.lang.Collections;
 import pt.tqs.hw1.zeromonos_collection.entity.Booking;
 import pt.tqs.hw1.zeromonos_collection.entity.BookingRequest;
 import pt.tqs.hw1.zeromonos_collection.entity.State;
@@ -43,6 +44,8 @@ public class BookingServiceTest {
     @InjectMocks
     private BookingsService bookingsService;
 
+    private LocalDate testDate = LocalDate.now().with(TemporalAdjusters.next(DayOfWeek.MONDAY));
+
 
     @Test
     @DisplayName("Create booking")
@@ -51,7 +54,7 @@ public class BookingServiceTest {
             .municipality("Lisbon")
             .village("Sintra")
             .postalCode("0000-000")
-            .date(LocalDate.now().with(TemporalAdjusters.next(DayOfWeek.MONDAY)))
+            .date(testDate)
             .time(LocalTime.of(10, 0))
             .description("item 1")
             .build();
@@ -88,7 +91,7 @@ public class BookingServiceTest {
             .municipality("Lisbon")
             .village("Sintra")
             .postalCode("0000-000")
-            .date(LocalDate.now().with(TemporalAdjusters.next(DayOfWeek.MONDAY)))
+            .date(testDate)
             .time(LocalTime.of(10, 0))
             .description("item 1")
             .build();
@@ -109,7 +112,7 @@ public class BookingServiceTest {
             .municipality("Lisbon")
             .village("Sintra")
             .postalCode("0000-000")
-            .date(LocalDate.now().with(TemporalAdjusters.next(DayOfWeek.MONDAY)))
+            .date(testDate)
             .time(LocalTime.of(8, 0))
             .description("item 1")
             .build();
@@ -117,7 +120,7 @@ public class BookingServiceTest {
             .municipality("Lisbon")
             .village("Sintra")
             .postalCode("0000-000")
-            .date(LocalDate.now().with(TemporalAdjusters.next(DayOfWeek.MONDAY)))
+            .date(testDate)
             .time(LocalTime.of(17, 0))
             .description("item 1")
             .build();
@@ -170,7 +173,7 @@ public class BookingServiceTest {
             .municipality("Lisbon")
             .village("Sintra")
             .postalCode("0000-000")
-            .date(LocalDate.now().with(TemporalAdjusters.next(DayOfWeek.MONDAY)))
+            .date(testDate)
             .time(LocalTime.of(7, 0))
             .description("item 1")
             .build();
@@ -317,5 +320,52 @@ public class BookingServiceTest {
 
         assertThat(available).doesNotContain(LocalTime.of(9, 0), LocalTime.of(12, 0));
         assertThat(available).contains(LocalTime.of(8, 0), LocalTime.of(10, 0), LocalTime.of(11, 0), LocalTime.of(13, 0));
+    }
+
+
+    @Test
+    @DisplayName("Get bookings by municipality")
+    void testGetBookingsByMunicipality() {
+        Booking booking1 = Booking.builder()
+            .municipality("Lisbon")
+            .village("Sintra")
+            .postalCode("0000-000")
+            .date(testDate)
+            .time(LocalTime.of(10, 0))
+            .state(State.RECEIVED)
+            .createdBy("bob@email.com")
+            .build();
+        Booking booking2 = Booking.builder()
+            .municipality("Lisbon")
+            .village("Cascais")
+            .postalCode("0000-000")
+            .date(testDate)
+            .time(LocalTime.of(10, 0))
+            .state(State.RECEIVED)
+            .createdBy("bob@email.com")
+            .build();
+        when(bookingRepository.findByMunicipality("Lisbon"))
+            .thenReturn(Arrays.asList(booking1, booking2));
+        
+        List<Booking> result = bookingsService.getBookingsByMunicipality("Lisbon");
+
+        assertThat(result).isNotEmpty();
+        assertThat(result.size()).isEqualTo(2);
+        assertThat(result.get(0).getMunicipality()).isEqualTo("Lisbon");
+        assertThat(result.get(1).getMunicipality()).isEqualTo("Lisbon");
+        verify(bookingRepository, times(1)).findByMunicipality("Lisbon");
+    }
+
+    @Test
+    @DisplayName("Get bookings by municipality returns empty list when no bookings exist")
+    void testGetBookingsByMunicipalityEmpty() {
+        String municipality = "Porto";
+        when(bookingRepository.findByMunicipality(municipality)).thenReturn(Collections.emptyList());
+
+        List<Booking> result = bookingsService.getBookingsByMunicipality(municipality);
+
+        assertThat(result).isNotNull();
+        assertThat(result).isEmpty();
+        verify(bookingRepository, times(1)).findByMunicipality(municipality);
     }
 }

@@ -165,6 +165,11 @@ public class BookingsService {
             .collect(Collectors.toList());
     }
 
+    public List<Booking> getBookingsByMunicipality(String municipality) {
+        log.info("Bookings requested for municipality={}", municipality);
+        return bookingRepository.findByMunicipality(municipality);
+    }
+
     private String generateToken() {
         return UUID.randomUUID().toString();
     }

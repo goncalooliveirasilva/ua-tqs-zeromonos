@@ -104,4 +104,11 @@ public class BookingsController {
         List<LocalTime> available = bookingsService.getAvailableTimes(municipality, date);
         return ResponseEntity.ok(available);
     }
+
+    @PreAuthorize("hasRole('STAFF')")
+    @GetMapping("/municipality/{municipality}")
+    public ResponseEntity<List<Booking>> getBookingsByMunicipality(@PathVariable String municipality) {
+        List<Booking> bookings = bookingsService.getBookingsByMunicipality(municipality);
+        return ResponseEntity.ok(bookings);
+    }
 }
