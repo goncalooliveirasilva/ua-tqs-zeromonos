@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import axios from 'axios'
 import {
   Container,
   Typography,
@@ -44,6 +43,7 @@ import {
   updateBookingState,
   getBookingsByDistrict,
 } from '../services/bookings'
+import { fetchDistrict, fetchAllMunicipalities } from '../services/locations'
 
 const StaffDashboard = () => {
   const navigate = useNavigate()
@@ -69,82 +69,76 @@ const StaffDashboard = () => {
       navigate('/login')
       return
     }
+
     fetchAllBookings()
-    fetchMunicipalities()
-    fetchDistricts()
+    loadDistricts()
+    loadMunicipalities()
   }, [navigate])
 
-  useEffect(() => {
-    applyFilters()
-  }, [bookings, selectedMunicipality])
+  const loadDistricts = async () => {
+    try {
+      const cached = localStorage.getItem('districts')
+      if (cached) {
+        setDistricts(JSON.parse(cached))
+      } else {
+        const data = await fetchDistrict()
+        setDistricts(data)
+        localStorage.setItem('districts', JSON.stringify(data))
+      }
+    } catch (err) {
+      console.error('Error loading districts:', err)
+      setError('Failed to load districts')
+    }
+  }
+
+  const loadMunicipalities = async () => {
+    try {
+      const cached = localStorage.getItem('municipalities')
+      if (cached) {
+        setMunicipalities(JSON.parse(cached))
+      } else {
+        const data = await fetchAllMunicipalities()
+        setMunicipalities(data)
+        localStorage.setItem('municipalities', JSON.stringify(data))
+      }
+    } catch (err) {
+      console.error('Error loading municipalities:', err)
+      setError('Failed to load municipalities')
+    }
+  }
 
   const fetchAllBookings = async () => {
     setLoading(true)
     try {
       const data = await getAllBookings()
       setBookings(data)
+      setFilteredBookings(data)
     } catch (err) {
       console.error('Error fetching bookings:', err)
       setError('Failed to load bookings')
-      if (err.response?.status === 401) {
-        navigate('/login')
-      }
+      if (err.response?.status === 401) navigate('/login')
     } finally {
       setLoading(false)
-    }
-  }
-
-  const fetchMunicipalities = async () => {
-    try {
-      const res = await axios.get('https://json.geoapi.pt/municipios')
-      const municipalityNames = res.data.map((m) => {
-        if (typeof m === 'string') return m
-        return m.municipio || m.nome || m
-      })
-      setMunicipalities(municipalityNames)
-    } catch (err) {
-      console.error('Error fetching municipalities:', err)
-    }
-  }
-
-  const fetchDistricts = async () => {
-    try {
-      const res = await axios.get('https://json.geoapi.pt/distritos')
-      const districtNames = res.data.map((d) => {
-        if (typeof d === 'string') return d
-        return d.distrito || d.nome || d
-      })
-      setDistricts(districtNames.sort())
-    } catch (err) {
-      console.error('Error fetching districts:', err)
     }
   }
 
   const applyFilters = async () => {
     try {
       let data = bookings
+
       if (selectedDistrict) {
         const districtData = await getBookingsByDistrict(selectedDistrict)
         data = districtData
       }
 
       if (selectedMunicipality) {
-        try {
-          const muniData = await getBookingsByMunicipality(selectedMunicipality)
-          // combine with district filter if both selected
-          data = selectedDistrict
-            ? muniData.filter(
-                (b) =>
-                  b.district?.toLowerCase() === selectedDistrict.toLowerCase(),
-              )
-            : muniData
-        } catch {
-          data = data.filter(
-            (b) =>
-              b.municipality?.toLowerCase() ===
-              selectedMunicipality.toLowerCase(),
-          )
-        }
+        const muniData = await getBookingsByMunicipality(selectedMunicipality)
+        data = selectedDistrict
+          ? muniData.filter(
+              (b) =>
+                b.district?.toLowerCase() === selectedDistrict.toLowerCase(),
+            )
+          : muniData
       }
 
       setFilteredBookings(data)
@@ -154,9 +148,13 @@ const StaffDashboard = () => {
     }
   }
 
+  useEffect(() => {
+    applyFilters()
+  }, [bookings, selectedDistrict, selectedMunicipality])
+
   const clearFilters = () => {
-    setSelectedMunicipality('')
     setSelectedDistrict('')
+    setSelectedMunicipality('')
     setFilteredBookings(bookings)
   }
 
@@ -227,6 +225,8 @@ const StaffDashboard = () => {
   const handleLogout = () => {
     localStorage.removeItem('token')
     localStorage.removeItem('role')
+    localStorage.removeItem('districts')
+    localStorage.removeItem('municipalities')
     navigate('/login')
   }
 
@@ -299,11 +299,19 @@ const StaffDashboard = () => {
               onChange={(e) => setSelectedMunicipality(e.target.value)}
             >
               <MenuItem value="">All Municipalities</MenuItem>
-              {municipalities.map((m) => (
-                <MenuItem key={m} value={m}>
-                  {m}
-                </MenuItem>
-              ))}
+              {selectedDistrict
+                ? municipalities
+                    .filter((m) => m.district === selectedDistrict)
+                    .map((m) => (
+                      <MenuItem key={m.name} value={m.name}>
+                        {m.name}
+                      </MenuItem>
+                    ))
+                : municipalities.map((m) => (
+                    <MenuItem key={m.name} value={m.name}>
+                      {m.name}
+                    </MenuItem>
+                  ))}
             </Select>
           </FormControl>
 

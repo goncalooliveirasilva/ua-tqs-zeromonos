@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import axios from 'axios'
 import {
   Container,
   Typography,
@@ -24,12 +23,18 @@ import {
   cancelBooking,
   getAvailableTimes,
 } from '../services/bookings'
+import {
+  fetchDistrict,
+  fetchAllMunicipalities,
+  fetchVillages,
+} from '../services/locations'
 
 const CitizenDashboard = () => {
   const navigate = useNavigate()
   const [bookings, setBookings] = useState([])
   const [districts, setDistricts] = useState([])
   const [municipalities, setMunicipalities] = useState([])
+  const [filteredMunicipalities, setFilteredMunicipalities] = useState([])
   const [villages, setVillages] = useState([])
   const [district, setDistrict] = useState('')
   const [municipality, setMunicipality] = useState('')
@@ -46,13 +51,11 @@ const CitizenDashboard = () => {
 
   useEffect(() => {
     const token = localStorage.getItem('token')
-    if (!token) {
-      navigate('/login')
-      return
-    }
+    if (!token) navigate('/login')
+
     fetchBookings()
-    fetchDistricts()
-    fetchAllMunicipalities()
+    loadDistricts()
+    loadMunicipalities()
   }, [])
 
   const fetchBookings = async () => {
@@ -65,44 +68,55 @@ const CitizenDashboard = () => {
     }
   }
 
-  const fetchDistricts = async () => {
+  const loadDistricts = async () => {
     try {
-      const res = await axios.get('https://json.geoapi.pt/distritos')
-      const districtNames = res.data.map((d) =>
-        typeof d === 'string' ? d : d.distrito || d.nome || d,
-      )
-      setDistricts(districtNames.sort())
+      const cached = localStorage.getItem('districts')
+      if (cached) {
+        setDistricts(JSON.parse(cached))
+      } else {
+        const districtsData = await fetchDistrict()
+        setDistricts(districtsData)
+        localStorage.setItem('districts', JSON.stringify(districtsData))
+      }
     } catch (err) {
-      console.error('Error fetching districts:', err)
-      setError('Could not load districts')
+      console.error('Error loading districts:', err)
     }
   }
 
-  const fetchAllMunicipalities = async () => {
+  const loadMunicipalities = async () => {
     try {
-      const res = await axios.get('https://json.geoapi.pt/municipios')
-      const muniNames = res.data.map((m) =>
-        typeof m === 'string' ? m : m.municipio || m.nome || m,
-      )
-      setMunicipalities(muniNames.sort())
+      const cached = localStorage.getItem('municipalities')
+      if (cached) {
+        const allMuni = JSON.parse(cached)
+        setMunicipalities(allMuni)
+        setFilteredMunicipalities(allMuni)
+      } else {
+        const allMuni = await fetchAllMunicipalities()
+        setMunicipalities(allMuni)
+        setFilteredMunicipalities(allMuni)
+        localStorage.setItem('municipalities', JSON.stringify(allMuni))
+      }
     } catch (err) {
-      console.error('Error fetching municipalities:', err)
-      setError('Could not load municipalities')
+      console.error('Error loading municipalities:', err)
     }
   }
 
-  const fetchVillages = async (muni) => {
-    if (!muni) return
-    try {
-      const res = await axios.get(
-        `https://json.geoapi.pt/municipio/${muni}/freguesias`,
+  useEffect(() => {
+    if (district) {
+      setFilteredMunicipalities(
+        municipalities.filter((m) => m.district === district),
       )
-      setVillages(res.data.freguesias || [])
-    } catch (err) {
-      console.error('Error fetching villages:', err)
-      setError('Could not load villages for this municipality')
-      setVillages([])
+    } else {
+      setFilteredMunicipalities(municipalities)
     }
+  }, [district, municipalities])
+
+  const handleMunicipalityChange = async (muni) => {
+    setMunicipality(muni)
+    setVillage('')
+    setAvailableTimes([])
+    const villagesData = await fetchVillages(muni)
+    setVillages(villagesData)
   }
 
   const fetchAvailableTimes = async () => {
@@ -167,7 +181,7 @@ const CitizenDashboard = () => {
       setError(
         err.response?.data?.message ||
           err.response?.data ||
-          'Error creating booking. Please try again.',
+          'Error creating booking.',
       )
     } finally {
       setLoading(false)
@@ -198,6 +212,8 @@ const CitizenDashboard = () => {
   const handleLogout = () => {
     localStorage.removeItem('token')
     localStorage.removeItem('role')
+    localStorage.removeItem('districts')
+    localStorage.removeItem('municipalities')
     navigate('/login')
   }
 
@@ -205,14 +221,14 @@ const CitizenDashboard = () => {
     switch (state) {
       case 'RECEIVED':
         return 'info'
-      case 'APPROVED':
+      case 'ASSIGNED':
         return 'success'
-      case 'REJECTED':
-        return 'error'
-      case 'CANCELED':
+      case 'IN_PROG':
         return 'warning'
-      case 'COMPLETED':
+      case 'DONE':
         return 'success'
+      case 'CANCELED':
+        return 'error'
       default:
         return 'default'
     }
@@ -356,11 +372,18 @@ const CitizenDashboard = () => {
           onSubmit={handleCreateBooking}
           sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}
         >
+          {/* District */}
           <TextField
             select
             label="District"
             value={district}
-            onChange={(e) => setDistrict(e.target.value)}
+            onChange={(e) => {
+              setDistrict(e.target.value)
+              setMunicipality('')
+              setVillage('')
+              setAvailableTimes([])
+              setVillages([])
+            }}
             required
             helperText="Select your district"
           >
@@ -371,27 +394,30 @@ const CitizenDashboard = () => {
             ))}
           </TextField>
 
+          {/* Municipality */}
           <TextField
             select
             label="Municipality"
             value={municipality}
-            onChange={(e) => {
-              setMunicipality(e.target.value)
-              setVillage('')
-              setAvailableTimes([])
-              setVillages([])
-              fetchVillages(e.target.value)
-            }}
+            onChange={(e) => handleMunicipalityChange(e.target.value)}
             required
-            helperText="Select your municipality"
+            disabled={!district || filteredMunicipalities.length === 0}
+            helperText={
+              !district
+                ? 'Select a district first'
+                : filteredMunicipalities.length === 0
+                  ? 'Loading municipalities...'
+                  : 'Select your municipality'
+            }
           >
-            {municipalities.map((m) => (
-              <MenuItem key={m} value={m}>
-                {m}
+            {filteredMunicipalities.map((m) => (
+              <MenuItem key={m.name} value={m.name}>
+                {m.name}
               </MenuItem>
             ))}
           </TextField>
 
+          {/* Village */}
           <TextField
             select
             label="Village (Freguesia)"
@@ -414,6 +440,7 @@ const CitizenDashboard = () => {
             ))}
           </TextField>
 
+          {/* Postal Code */}
           <TextField
             label="Postal Code"
             placeholder="0000-000"
@@ -422,6 +449,7 @@ const CitizenDashboard = () => {
             required
           />
 
+          {/* Date */}
           <TextField
             type="date"
             label="Date"
@@ -433,13 +461,12 @@ const CitizenDashboard = () => {
               setAvailableTimes([])
             }}
             onBlur={fetchAvailableTimes}
-            inputProps={{
-              min: new Date().toISOString().split('T')[0],
-            }}
+            inputProps={{ min: new Date().toISOString().split('T')[0] }}
             required
             helperText="Select a date to see available times"
           />
 
+          {/* Time */}
           <TextField
             select
             label="Time"
@@ -462,6 +489,7 @@ const CitizenDashboard = () => {
             ))}
           </TextField>
 
+          {/* Description */}
           <TextField
             label="Description"
             multiline
@@ -473,6 +501,7 @@ const CitizenDashboard = () => {
             helperText="Provide details about what needs to be collected"
           />
 
+          {/* Submit Button */}
           <Button
             type="submit"
             variant="contained"
