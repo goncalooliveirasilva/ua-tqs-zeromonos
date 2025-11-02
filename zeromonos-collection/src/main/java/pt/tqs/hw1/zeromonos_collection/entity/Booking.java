@@ -29,6 +29,9 @@ public class Booking {
     private Long id;
 
     @Column(nullable = false)
+    private String district;
+
+    @Column(nullable = false)
     private String municipality;
 
     @Column(nullable = false)

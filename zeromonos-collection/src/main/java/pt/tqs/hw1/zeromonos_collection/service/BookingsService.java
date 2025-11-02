@@ -67,6 +67,7 @@ public class BookingsService {
         }
 
         Booking booking = Booking.builder()
+            .district(request.getDistrict())
             .municipality(request.getMunicipality())
             .village(request.getVillage())
             .postalCode(request.getPostalCode())
@@ -168,6 +169,11 @@ public class BookingsService {
     public List<Booking> getBookingsByMunicipality(String municipality) {
         log.info("Bookings requested for municipality={}", municipality);
         return bookingRepository.findByMunicipality(municipality);
+    }
+
+    public List<Booking> getBookingsByDistrict(String  district) {
+        log.info("Bookings requested for district={}", district);
+        return bookingRepository.findByDistrict(district);
     }
 
     private String generateToken() {

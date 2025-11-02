@@ -51,6 +51,7 @@ public class BookingServiceTest {
     @DisplayName("Create booking")
     void testCreateBooking() {
         BookingRequest request = BookingRequest.builder()
+            .district("District")
             .municipality("Lisbon")
             .village("Sintra")
             .postalCode("0000-000")
@@ -62,6 +63,7 @@ public class BookingServiceTest {
         Booking saved = Booking.builder()
             .id(1L)
             .municipality(request.getMunicipality())
+            .district("District")
             .village("Sintra")
             .postalCode("0000-000")
             .date(request.getDate())
@@ -88,6 +90,7 @@ public class BookingServiceTest {
     @DisplayName("Deny booking when max capacity is reached")
     void testCreateBookingMaxCapacityReached() {
         BookingRequest request = BookingRequest.builder()
+            .district("District")
             .municipality("Lisbon")
             .village("Sintra")
             .postalCode("0000-000")
@@ -109,6 +112,7 @@ public class BookingServiceTest {
     @DisplayName("Allow booking exactly at 08:00 and 17:00")
     void testCreateBookingArEdgeHours() {
         BookingRequest b1 = BookingRequest.builder()
+            .district("District")
             .municipality("Lisbon")
             .village("Sintra")
             .postalCode("0000-000")
@@ -117,6 +121,7 @@ public class BookingServiceTest {
             .description("item 1")
             .build();
         BookingRequest b2 = BookingRequest.builder()
+            .district("District")
             .municipality("Lisbon")
             .village("Sintra")
             .postalCode("0000-000")
@@ -127,6 +132,7 @@ public class BookingServiceTest {
 
         Booking saved = Booking.builder()
             .id(1L)
+            .district("District")
             .municipality("Lisbon")
             .village("Sintra")
             .postalCode("0000-000")
@@ -153,6 +159,7 @@ public class BookingServiceTest {
     @DisplayName("Deny booking in the past")
     void testBookingForPastDate() {
         BookingRequest request = BookingRequest.builder()
+            .district("District")
             .municipality("Lisbon")
             .village("Sintra")
             .postalCode("0000-000")
@@ -170,6 +177,7 @@ public class BookingServiceTest {
     @DisplayName("Deny booking outside of working hours")
     void testCreateBookingOutOfHours() {
         BookingRequest request = BookingRequest.builder()
+            .district("District")
             .municipality("Lisbon")
             .village("Sintra")
             .postalCode("0000-000")
@@ -187,6 +195,7 @@ public class BookingServiceTest {
     @DisplayName("Deny bookings on weekends")
     void testCreateBookingsOnWeekends() {
         BookingRequest request = BookingRequest.builder()
+            .district("District")
             .municipality("Lisbon")
             .village("Sintra")
             .postalCode("0000-000")
@@ -205,6 +214,7 @@ public class BookingServiceTest {
     void testCancelBooking() {
         Booking booking = Booking.builder()
             .id(1L)
+            .district("District")
             .municipality("Lisbon")
             .village("Sintra")
             .postalCode("0000-000")
@@ -231,6 +241,7 @@ public class BookingServiceTest {
     void testUpdateState() {
         Booking booking = Booking.builder()
             .id(1L)
+            .district("District")
             .municipality("Lisbon")
             .village("Sintra")
             .postalCode("0000-000")
@@ -258,6 +269,7 @@ public class BookingServiceTest {
     void testUpdateInvalidStateTransition() {
         Booking booking = Booking.builder()
             .id(1L)
+            .district("District")
             .municipality("Lisbon")
             .village("Sintra")
             .postalCode("0000-000")
@@ -283,6 +295,7 @@ public class BookingServiceTest {
     void testUpdateSameState() {
         Booking booking = Booking.builder()
             .id(1L)
+            .district("District")
             .municipality("Lisbon")
             .village("Sintra")
             .postalCode("0000-000")
@@ -327,6 +340,7 @@ public class BookingServiceTest {
     @DisplayName("Get bookings by municipality")
     void testGetBookingsByMunicipality() {
         Booking booking1 = Booking.builder()
+            .district("District")
             .municipality("Lisbon")
             .village("Sintra")
             .postalCode("0000-000")
@@ -336,6 +350,7 @@ public class BookingServiceTest {
             .createdBy("bob@email.com")
             .build();
         Booking booking2 = Booking.builder()
+            .district("District")
             .municipality("Lisbon")
             .village("Cascais")
             .postalCode("0000-000")
@@ -367,5 +382,43 @@ public class BookingServiceTest {
         assertThat(result).isNotNull();
         assertThat(result).isEmpty();
         verify(bookingRepository, times(1)).findByMunicipality(municipality);
+    }
+
+    @Test
+    @DisplayName("Get bookings by district")
+    void testGetBookingsByDistrict() {
+        Booking b1 = Booking.builder()
+            .district("District")
+            .municipality("Lisbon")
+            .village("Sintra")
+            .postalCode("0000-000")
+            .date(testDate)
+            .time(LocalTime.of(10, 0))
+            .state(State.RECEIVED)
+            .createdBy("bob@email.com")
+            .build();
+
+        when(bookingRepository.findByDistrict("District")).thenReturn(Arrays.asList(b1));
+
+        List<Booking> result = bookingsService.getBookingsByDistrict("District");
+
+        assertThat(result).isNotNull();
+        assertThat(result).isNotEmpty();
+        assertThat(result.size()).isEqualTo(1);
+        assertThat(result.get(0).getDistrict()).isEqualTo("District");
+        verify(bookingRepository, times(1)).findByDistrict("District");
+    }
+
+        @Test
+    @DisplayName("Get bookings by district returns empty list when no bookings exist")
+    void testGetBookingsByDistrictEmpty() {
+        String district = "Braga";
+        when(bookingRepository.findByDistrict(district)).thenReturn(Collections.emptyList());
+
+        List<Booking> result = bookingsService.getBookingsByDistrict(district);
+
+        assertThat(result).isNotNull();
+        assertThat(result).isEmpty();
+        verify(bookingRepository, times(1)).findByDistrict(district);
     }
 }

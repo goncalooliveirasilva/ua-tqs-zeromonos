@@ -27,6 +27,7 @@ public class BookingRepositoryTest {
         LocalDate date = LocalDate.of(2025, 1, 1);
 
         bookingRepository.save(Booking.builder()
+            .district("District")
             .municipality("Lisbon")
             .village("Sintra")
             .postalCode("1111-111")
@@ -39,6 +40,7 @@ public class BookingRepositoryTest {
             .build());
 
         bookingRepository.save(Booking.builder()
+            .district("District")
             .municipality("Lisbon")
             .village("Sintra")
             .postalCode("0000-000")

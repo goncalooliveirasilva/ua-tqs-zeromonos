@@ -111,4 +111,11 @@ public class BookingsController {
         List<Booking> bookings = bookingsService.getBookingsByMunicipality(municipality);
         return ResponseEntity.ok(bookings);
     }
+
+    @PreAuthorize("hasRole('STAFF')")
+    @GetMapping("/district/{district}")
+    public ResponseEntity<List<Booking>> getBookingsByDistrict(@PathVariable String district) {
+        List<Booking> bookings = bookingsService.getBookingsByDistrict(district);
+        return ResponseEntity.ok(bookings);
+    }
 }

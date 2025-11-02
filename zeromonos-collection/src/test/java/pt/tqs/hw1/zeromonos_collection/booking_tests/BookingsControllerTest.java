@@ -61,6 +61,7 @@ public class BookingsControllerTest {
         bookingRepository.deleteAll();
         b = bookingRepository.save(
             Booking.builder()
+                .district("District")
                 .municipality("Lisbon")
                 .village("Sintra")
                 .postalCode("0000-000")
@@ -89,6 +90,7 @@ public class BookingsControllerTest {
     void testGetBookingByToken() throws Exception {
         Booking booking = bookingRepository.save(
             Booking.builder()
+                .district("District")
                 .municipality("Lisbon")
                 .village("Sintra")
                 .postalCode("0000-000")
@@ -119,6 +121,7 @@ public class BookingsControllerTest {
     @DisplayName("POST /api/v1/bookings creates a booking successfully")
     void testCreateBooking() throws Exception {
         BookingRequest request = BookingRequest.builder()
+            .district("District")
             .municipality("Lisbon")
             .village("Sintra")
             .postalCode("0000-000")
@@ -140,6 +143,7 @@ public class BookingsControllerTest {
     @DisplayName("POST /api/v1/bookings doesn't create a booking")
     void testStaffCreateBooking() throws Exception {
         BookingRequest request = BookingRequest.builder()
+            .district("District")
             .municipality("Lisbon")
             .village("Sintra")
             .postalCode("0000-000")
@@ -161,6 +165,7 @@ public class BookingsControllerTest {
     void testGetBookingsForCitizen() throws Exception {
         bookingRepository.save(
             Booking.builder()
+                .district("District")
                 .municipality("Porto")
                 .village("Sintra")
                 .postalCode("0000-000")
@@ -193,6 +198,7 @@ public class BookingsControllerTest {
     void testCancelBooking() throws Exception {
         Booking booking = bookingRepository.save(
             Booking.builder()
+                .district("District")
                 .municipality("Lisbon")
                 .village("Sintra")
                 .postalCode("0000-000")
@@ -299,6 +305,7 @@ public class BookingsControllerTest {
     void testGetBookingsByMunicipality() throws Exception {
         bookingRepository.save(
             Booking.builder()
+                .district("District")
                 .municipality("Lisbon")
                 .village("Cascais")
                 .postalCode("1111-111")
@@ -331,6 +338,48 @@ public class BookingsControllerTest {
     @DisplayName("GET /api/v1/bookings/municipality/{municipality} returns 401 for unauthenticated users")
     void testGetBookingsByMunicipalityUnauthorized() throws Exception {
         mockMvc.perform(get("/api/v1/bookings/municipality/{municipality}", "Lisbon"))
+            .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(username = "staff@email.com", roles = {"STAFF"})
+    @DisplayName("GET /api/v1/bookings/district/{district} returns bookings dor staff")
+    void testGetBookingsByDistrict() throws Exception {
+        bookingRepository.save(
+            Booking.builder()
+                .district("Viana")
+                .municipality("Ponte de Lima")
+                .village("Cascais")
+                .postalCode("1111-111")
+                .date(futureDate.plusDays(1))
+                .time(LocalTime.of(10, 0))
+                .description("item 2")
+                .state(State.ASSIGNED)
+                .token("tok2")
+                .createdBy("alice@email.com")
+                .build()
+        );
+
+        mockMvc.perform(get("/api/v1/bookings/district/{district}", "Viana"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$").isArray())
+            .andExpect(jsonPath("$.length()").value(1))
+            .andExpect(jsonPath("$[0].district").value("Viana"))
+            .andExpect(jsonPath("$[0].municipality").value("Ponte de Lima"));
+    }
+
+    @Test
+    @WithMockUser(username = "citizen@email.com", roles = {"CITIZEN"})
+    @DisplayName("GET /api/v1/bookings/district/{district}} returns 403 for citizen")
+    void testGetBookingsByDistrictForbiddenForCitizen() throws Exception {
+        mockMvc.perform(get("/api/v1/bookings/district/{municipality}", "Viana"))
+            .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/bookings/district/{district} returns 401 for unauthenticated users")
+    void testGetBookingsByDistrictUnauthorized() throws Exception {
+        mockMvc.perform(get("/api/v1/bookings/district/{district}", "Viana"))
             .andExpect(status().isForbidden());
     }
 }

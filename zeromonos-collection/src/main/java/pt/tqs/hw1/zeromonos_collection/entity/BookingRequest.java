@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class BookingRequest {
+    private String district;
     private String municipality;
     private String village;
     private String postalCode;
