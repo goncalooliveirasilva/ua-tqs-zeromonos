@@ -30,7 +30,13 @@ public class SecurityConfiguration {
             .csrf(csrf -> csrf.disable())
             .cors(cors -> {})
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/v1/auth/**", "/api/v1/bookings/public/**").permitAll()
+                .requestMatchers(
+                    "/api/v1/auth/**",
+                    "/api/v1/bookings/public/**",
+                    "/swagger-ui/**",
+                    "/v3/api-docs/**",
+                    "/swagger-ui.html"
+                ).permitAll()
                 .anyRequest().authenticated())
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // new session for each request
