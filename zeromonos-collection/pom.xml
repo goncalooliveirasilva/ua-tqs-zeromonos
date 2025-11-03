@@ -173,18 +173,12 @@
 				</goals>
 				</execution>
 				<execution>
-					<id>report</id>
-					<phase>test</phase>
-					<goals>
-						<goal>report</goal>
-					</goals>
-					<configuration>
-						<excludes>
-						<exclude>pt/tqs/hw1/zeromonoscollection/ZeromonosCollectionApplication.class</exclude>
-						<exclude>**/configs/*</exclude>
-						</excludes>
-					</configuration>
-					</execution>
+				<id>report</id>
+				<phase>test</phase>
+				<goals>
+					<goal>report</goal>
+				</goals>
+				</execution>
 			</executions>
 			</plugin>
 		</plugins>
