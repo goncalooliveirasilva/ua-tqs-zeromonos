@@ -136,6 +136,7 @@ const AuthPage = () => {
               required
               disabled={loading}
               autoComplete="name"
+              id="register-username"
             />
           )}
 
@@ -150,11 +151,13 @@ const AuthPage = () => {
             required
             disabled={loading}
             autoComplete="email"
+            id="register-email"
           />
 
           <TextField
             fullWidth
             label="Password"
+            id="register-password"
             name="password"
             type="password"
             margin="normal"
@@ -168,6 +171,7 @@ const AuthPage = () => {
           <Button
             fullWidth
             type="submit"
+            id="register-submit"
             variant="contained"
             size="large"
             sx={{ mt: 3, mb: 2 }}

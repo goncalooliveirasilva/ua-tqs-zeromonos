@@ -151,6 +151,7 @@ const LandingPage = () => {
           Book and manage waste collection easily
         </Typography>
         <Button
+          id="get-started-button"
           component={Link}
           to="/login"
           variant="contained"
@@ -190,6 +191,7 @@ const LandingPage = () => {
           <TextField
             fullWidth
             label="Booking Token"
+            id="booking-token-input"
             placeholder="Enter your booking token"
             value={token}
             onChange={(e) => {
@@ -201,6 +203,7 @@ const LandingPage = () => {
             error={!!error}
           />
           <Button
+            id="booking-token-button"
             variant="contained"
             onClick={fetchBooking}
             disabled={loading || !token.trim()}
@@ -258,7 +261,7 @@ const LandingPage = () => {
             </Stack>
           </Box>
 
-          <CardContent sx={{ p: 4 }}>
+          <CardContent sx={{ p: 4 }} id="booking-card">
             <Grid container spacing={4}>
               {/* location*/}
               <Grid item xs={12}>

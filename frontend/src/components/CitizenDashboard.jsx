@@ -350,7 +350,8 @@ const CitizenDashboard = () => {
               Booking Created Successfully!
             </Typography>
             <Typography variant="body2" gutterBottom>
-              Your booking token is: <strong>{lastBookingToken}</strong>
+              Your booking token is:{' '}
+              <strong id="booking-token">{lastBookingToken}</strong>
             </Typography>
             <Typography variant="caption">
               Save this token to check your booking status without logging in.
@@ -376,6 +377,7 @@ const CitizenDashboard = () => {
           <TextField
             select
             label="District"
+            id="booking-district"
             value={district}
             onChange={(e) => {
               setDistrict(e.target.value)
@@ -388,7 +390,11 @@ const CitizenDashboard = () => {
             helperText="Select your district"
           >
             {districts.map((d) => (
-              <MenuItem key={d} value={d}>
+              <MenuItem
+                key={d}
+                value={d}
+                id={`district-option-${d.toLowerCase()}`}
+              >
                 {d}
               </MenuItem>
             ))}
@@ -398,6 +404,7 @@ const CitizenDashboard = () => {
           <TextField
             select
             label="Municipality"
+            id="booking-municipality"
             value={municipality}
             onChange={(e) => handleMunicipalityChange(e.target.value)}
             required
@@ -411,7 +418,11 @@ const CitizenDashboard = () => {
             }
           >
             {filteredMunicipalities.map((m) => (
-              <MenuItem key={m.name} value={m.name}>
+              <MenuItem
+                key={m.name}
+                value={m.name}
+                id={`municipality-option-${m.name.toLowerCase()}`}
+              >
                 {m.name}
               </MenuItem>
             ))}
@@ -421,6 +432,7 @@ const CitizenDashboard = () => {
           <TextField
             select
             label="Village (Freguesia)"
+            id="booking-village"
             value={village}
             onChange={(e) => setVillage(e.target.value)}
             required
@@ -434,7 +446,11 @@ const CitizenDashboard = () => {
             }
           >
             {villages.map((v) => (
-              <MenuItem key={v} value={v}>
+              <MenuItem
+                key={v}
+                value={v}
+                id={`village-option-${v.toLowerCase()}`}
+              >
                 {v}
               </MenuItem>
             ))}
@@ -442,6 +458,7 @@ const CitizenDashboard = () => {
 
           {/* Postal Code */}
           <TextField
+            id="booking-postalcode"
             label="Postal Code"
             placeholder="0000-000"
             value={postalCode}
@@ -453,6 +470,7 @@ const CitizenDashboard = () => {
           <TextField
             type="date"
             label="Date"
+            id="booking-date"
             InputLabelProps={{ shrink: true }}
             value={date}
             onChange={(e) => {
@@ -469,6 +487,7 @@ const CitizenDashboard = () => {
           {/* Time */}
           <TextField
             select
+            id="booking-time"
             label="Time"
             value={time}
             onChange={(e) => setTime(e.target.value)}
@@ -483,7 +502,11 @@ const CitizenDashboard = () => {
             }
           >
             {availableTimes.map((t) => (
-              <MenuItem key={t} value={t}>
+              <MenuItem
+                key={t}
+                value={t}
+                id={`time-option-${t.replace(':', '')}`}
+              >
                 {t}
               </MenuItem>
             ))}
@@ -492,6 +515,7 @@ const CitizenDashboard = () => {
           {/* Description */}
           <TextField
             label="Description"
+            id="booking-description"
             multiline
             rows={3}
             placeholder="Describe the items you want to collect..."
@@ -503,6 +527,7 @@ const CitizenDashboard = () => {
 
           {/* Submit Button */}
           <Button
+            id="booking-submit"
             type="submit"
             variant="contained"
             size="large"

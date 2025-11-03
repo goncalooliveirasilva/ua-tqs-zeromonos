@@ -278,13 +278,18 @@ const StaffDashboard = () => {
           <FormControl sx={{ minWidth: 200 }}>
             <InputLabel>District</InputLabel>
             <Select
+              id="staff-filter-district"
               value={selectedDistrict}
               label="District"
               onChange={(e) => setSelectedDistrict(e.target.value)}
             >
               <MenuItem value="">All Districts</MenuItem>
               {districts.map((d) => (
-                <MenuItem key={d} value={d}>
+                <MenuItem
+                  key={d}
+                  value={d}
+                  id={`staff-district-option-${d.toLowerCase()}`}
+                >
                   {d}
                 </MenuItem>
               ))}
@@ -294,6 +299,7 @@ const StaffDashboard = () => {
           <FormControl sx={{ minWidth: 200 }}>
             <InputLabel>Municipality</InputLabel>
             <Select
+              id="staff-filter-municipality"
               value={selectedMunicipality}
               label="Municipality"
               onChange={(e) => setSelectedMunicipality(e.target.value)}
@@ -303,12 +309,20 @@ const StaffDashboard = () => {
                 ? municipalities
                     .filter((m) => m.district === selectedDistrict)
                     .map((m) => (
-                      <MenuItem key={m.name} value={m.name}>
+                      <MenuItem
+                        key={m.name}
+                        value={m.name}
+                        id={`staff-municipality-option-${m.name.toLowerCase()}`}
+                      >
                         {m.name}
                       </MenuItem>
                     ))
                 : municipalities.map((m) => (
-                    <MenuItem key={m.name} value={m.name}>
+                    <MenuItem
+                      key={m.name}
+                      value={m.name}
+                      id={`staff-municipality-option-${m.name.toLowerCase()}`}
+                    >
                       {m.name}
                     </MenuItem>
                   ))}
@@ -368,7 +382,7 @@ const StaffDashboard = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {filteredBookings.map((booking) => (
+                {filteredBookings.map((booking, index) => (
                   <TableRow key={booking.id}>
                     <TableCell>{booking.id}</TableCell>
                     <TableCell>{booking.district || '-'}</TableCell>
@@ -381,6 +395,7 @@ const StaffDashboard = () => {
                     <TableCell>{booking.createdBy}</TableCell>
                     <TableCell>
                       <Chip
+                        id={`booking-state-chip-${booking.state.toLowerCase()}`}
                         label={booking.state}
                         color={getStateColor(booking.state)}
                         size="small"
@@ -390,6 +405,7 @@ const StaffDashboard = () => {
                       <Stack direction="row" spacing={1}>
                         <Tooltip title="View Details">
                           <IconButton
+                            id={`view-details-button-${index}`}
                             size="small"
                             color="primary"
                             onClick={() => handleViewDetails(booking)}
@@ -399,6 +415,7 @@ const StaffDashboard = () => {
                         </Tooltip>
                         {getAvailableStates(booking.state).length > 0 && (
                           <Button
+                            id={`update-state-button-${index}`}
                             size="small"
                             variant="outlined"
                             onClick={() => handleOpenStateDialog(booking)}
@@ -418,6 +435,7 @@ const StaffDashboard = () => {
 
       {/* Booking Details Dialog */}
       <Dialog
+        id="booking-details-dialog"
         open={detailsDialogOpen}
         onClose={() => setDetailsDialogOpen(false)}
         maxWidth="md"
@@ -506,6 +524,7 @@ const StaffDashboard = () => {
               <Divider sx={{ my: 3 }} />
 
               <Box
+                id="state-history-section"
                 sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}
               >
                 <Timeline />
@@ -554,6 +573,7 @@ const StaffDashboard = () => {
 
       {/* Update State Dialog */}
       <Dialog
+        id="update-state-dialog"
         open={stateDialogOpen}
         onClose={() => setStateDialogOpen(false)}
         maxWidth="xs"
@@ -567,13 +587,18 @@ const StaffDashboard = () => {
           <FormControl fullWidth>
             <InputLabel>New State</InputLabel>
             <Select
+              id="new-state-select"
               value={newState}
               label="New State"
               onChange={(e) => setNewState(e.target.value)}
             >
               {selectedBooking &&
                 getAvailableStates(selectedBooking.state).map((state) => (
-                  <MenuItem key={state} value={state}>
+                  <MenuItem
+                    key={state}
+                    value={state}
+                    id={`state-option-${state.toLowerCase()}`}
+                  >
                     {state}
                   </MenuItem>
                 ))}
@@ -583,6 +608,7 @@ const StaffDashboard = () => {
         <DialogActions>
           <Button onClick={() => setStateDialogOpen(false)}>Cancel</Button>
           <Button
+            id="confirm-update-state-button"
             onClick={handleUpdateState}
             variant="contained"
             disabled={!newState || loading}
