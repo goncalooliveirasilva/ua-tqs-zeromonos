@@ -20,7 +20,7 @@ import pt.tqs.hw1.zeromonos_collection.repository.UserRepository;
 
 @SpringBootTest // to load the entire context (security, etc.)
 @AutoConfigureMockMvc // to just simulate http calls
-public class AuthenticationControllerTest {
+class AuthenticationControllerTest {
 
     @Autowired
     private MockMvc mockMvc;

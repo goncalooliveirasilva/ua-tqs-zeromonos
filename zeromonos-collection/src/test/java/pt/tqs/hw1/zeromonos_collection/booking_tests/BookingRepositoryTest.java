@@ -16,7 +16,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 @DataJpaTest
-public class BookingRepositoryTest {
+class BookingRepositoryTest {
     
     @Autowired
     private BookingRepository bookingRepository;

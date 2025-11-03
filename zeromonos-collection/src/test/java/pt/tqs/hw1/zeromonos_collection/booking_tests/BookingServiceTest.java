@@ -7,7 +7,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import io.jsonwebtoken.lang.Collections;
+import java.util.Collections;
 import pt.tqs.hw1.zeromonos_collection.entity.Booking;
 import pt.tqs.hw1.zeromonos_collection.entity.BookingRequest;
 import pt.tqs.hw1.zeromonos_collection.entity.State;
@@ -33,7 +33,7 @@ import java.util.List;
 import java.util.Optional;
 
 @ExtendWith(MockitoExtension.class)
-public class BookingServiceTest {
+class BookingServiceTest {
     
     @Mock
     private BookingRepository bookingRepository;
@@ -365,7 +365,7 @@ public class BookingServiceTest {
         List<Booking> result = bookingsService.getBookingsByMunicipality("Lisbon");
 
         assertThat(result).isNotEmpty();
-        assertThat(result.size()).isEqualTo(2);
+        assertThat(result).hasSize(2);
         assertThat(result.get(0).getMunicipality()).isEqualTo("Lisbon");
         assertThat(result.get(1).getMunicipality()).isEqualTo("Lisbon");
         verify(bookingRepository, times(1)).findByMunicipality("Lisbon");
@@ -402,7 +402,7 @@ public class BookingServiceTest {
         List<Booking> result = bookingsService.getBookingsByDistrict("District");
 
         assertThat(result).isNotNull().isNotEmpty();
-        assertThat(result.size()).isEqualTo(1);
+        assertThat(result).hasSize(1);
         assertThat(result.get(0).getDistrict()).isEqualTo("District");
         verify(bookingRepository, times(1)).findByDistrict("District");
     }
