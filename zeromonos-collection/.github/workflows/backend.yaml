@@ -1,0 +1,25 @@
+name: Backend CI
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  test:
+    name: Run HW1 Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/chechkout@v4
+
+      - name: Setup JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+
+      - name: Run tests in HW1 folder
+        working-directory: HW1/zeromonos-collection
+        run: mvn clean verify -B
