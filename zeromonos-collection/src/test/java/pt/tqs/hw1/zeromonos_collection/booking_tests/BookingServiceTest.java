@@ -33,7 +33,7 @@ import java.util.List;
 import java.util.Optional;
 
 @ExtendWith(MockitoExtension.class)
-class BookingServiceTest {
+public class BookingServiceTest {
     
     @Mock
     private BookingRepository bookingRepository;
