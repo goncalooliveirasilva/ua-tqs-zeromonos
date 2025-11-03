@@ -79,8 +79,17 @@ public class BookingsService {
             .createdBy(createdBy)
             .build();
         
+        Booking saved = bookingRepository.save(booking);
+        BookingStateHistory history = BookingStateHistory.builder()
+            .bookingId(saved.getId().longValue())
+            .state(State.RECEIVED)
+            .timestamp(LocalDateTime.now())
+            .changedBy(createdBy)
+            .build();
+        
+        bookingStateHistoryRepository.save(history);
         log.info("Booking created for email={}", createdBy);
-        return bookingRepository.save(booking);
+        return saved;
     }
 
     public Optional<Booking> getByToken(String token) {
@@ -93,9 +102,9 @@ public class BookingsService {
 
     public Booking cancelBooking(Long id) {
         Booking b = getById(id);
-        Booking booking = updateState(id, State.CANCELED, b.getCreatedBy());
-        log.info("Booking canceled for email={}", booking.getCreatedBy());
-        return booking;
+        Booking saved = updateState(id, State.CANCELED, b.getCreatedBy());
+        log.info("Booking canceled for email={}", saved.getCreatedBy());
+        return saved;
     }
 
     public List<Booking> getAllBookings() {
