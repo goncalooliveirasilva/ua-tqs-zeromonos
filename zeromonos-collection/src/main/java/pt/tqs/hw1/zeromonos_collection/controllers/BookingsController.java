@@ -62,7 +62,7 @@ public class BookingsController {
 
     @PreAuthorize("hasRole('CITIZEN')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> cancelBooking(@PathVariable Long id) {
+    public ResponseEntity<Booking> cancelBooking(@PathVariable Long id) {
         Booking canceled = bookingsService.cancelBooking(id);
         return ResponseEntity.ok(canceled);
     }

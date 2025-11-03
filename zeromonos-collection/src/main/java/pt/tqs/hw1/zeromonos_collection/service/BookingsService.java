@@ -32,7 +32,7 @@ public class BookingsService {
     private final BookingStateHistoryRepository bookingStateHistoryRepository;
 
     // max capacity for municipality per day (all equal to simplify)
-    private final Integer MAX_CAPACITY_PER_DAY_PER_MUNICIPALITY = 10;
+    private static final Integer MAX_CAPACITY_PER_DAY_PER_MUNICIPALITY = 10;
 
 
     public Booking createBooking(BookingRequest request, String createdBy) {
@@ -109,9 +109,8 @@ public class BookingsService {
     }
 
     public Booking getById(Long id) {
-        Booking booking = bookingRepository.findById(id)
+        return bookingRepository.findById(id)
             .orElseThrow(() -> new NoSuchElementException("Booking not found."));
-        return booking;
     }
 
     public Booking updateState(Long id, State newState, String changedBy) {
@@ -163,7 +162,7 @@ public class BookingsService {
         
         return allSlots.stream()
             .filter(t -> !bookedTimes.contains(t))
-            .collect(Collectors.toList());
+            .toList();
     }
 
     public List<Booking> getBookingsByMunicipality(String municipality) {

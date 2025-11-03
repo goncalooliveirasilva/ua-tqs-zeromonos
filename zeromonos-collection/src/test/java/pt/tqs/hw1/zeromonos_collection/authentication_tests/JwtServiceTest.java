@@ -11,7 +11,7 @@ import pt.tqs.hw1.zeromonos_collection.entity.Role;
 import pt.tqs.hw1.zeromonos_collection.entity.User;
 import pt.tqs.hw1.zeromonos_collection.service.JwtService;
 
-public class JwtServiceTest {
+class JwtServiceTest {
 
     @Test
     @DisplayName("Test token generation and validation.")

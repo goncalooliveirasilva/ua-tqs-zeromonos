@@ -11,12 +11,14 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class ControllerExceptionHandler {
+
+    private String error = "String";
     
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, Object>> handleIllegalArgument(IllegalArgumentException e) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
             .body(Map.of(
-                "error", e.getMessage()
+                error, e.getMessage()
             ));
     }
 
@@ -24,7 +26,7 @@ public class ControllerExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleIllegalState(IllegalStateException e) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
             .body(Map.of(
-                "error", e.getMessage()
+                error, e.getMessage()
             ));
     }
 
@@ -32,7 +34,7 @@ public class ControllerExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleNotFound(NoSuchElementException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
             .body(Map.of(
-                "error", e.getMessage()
+                error, e.getMessage()
             ));
     }
 
@@ -40,7 +42,7 @@ public class ControllerExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleAccessDeniedException(AuthorizationDeniedException e) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
             .body(Map.of(
-                "error", "Access Denied"
+                error, "Access Denied"
             ));
     }
 
@@ -48,7 +50,7 @@ public class ControllerExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleGenericException(Exception e) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
             .body(Map.of(
-                "error", e.getMessage()
+                error, e.getMessage()
             ));
     }
 }

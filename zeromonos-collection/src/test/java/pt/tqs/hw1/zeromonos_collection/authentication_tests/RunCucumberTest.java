@@ -1,3 +1,4 @@
+// package pt.tqs.hw1.zeromonos_collection.authentication_tests;
 // package pt.tqs.hw1.zeromonos_collection;
 
 // import org.junit.platform.suite.api.ConfigurationParameter;

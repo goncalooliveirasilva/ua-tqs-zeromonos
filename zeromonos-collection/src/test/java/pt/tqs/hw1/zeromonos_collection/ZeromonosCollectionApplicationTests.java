@@ -8,6 +8,7 @@ class ZeromonosCollectionApplicationTests {
 
 	@Test
 	void contextLoads() {
+		// StringBootTests context loading
 	}
 
 }

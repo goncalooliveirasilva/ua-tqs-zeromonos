@@ -29,7 +29,7 @@ import pt.tqs.hw1.zeromonos_collection.service.AuthenticationService;
 import pt.tqs.hw1.zeromonos_collection.service.JwtService;
 
 @ExtendWith(MockitoExtension.class)
-public class AuthenticationServiceTest {
+class AuthenticationServiceTest {
 
     @Mock
     private UserRepository userRepository;

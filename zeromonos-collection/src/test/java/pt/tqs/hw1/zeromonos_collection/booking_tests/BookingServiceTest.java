@@ -33,7 +33,7 @@ import java.util.List;
 import java.util.Optional;
 
 @ExtendWith(MockitoExtension.class)
-public class BookingServiceTest {
+class BookingServiceTest {
     
     @Mock
     private BookingRepository bookingRepository;
@@ -331,8 +331,8 @@ public class BookingServiceTest {
 
         List<LocalTime> available = bookingsService.getAvailableTimes("Lisbon", date);
 
-        assertThat(available).doesNotContain(LocalTime.of(9, 0), LocalTime.of(12, 0));
-        assertThat(available).contains(LocalTime.of(8, 0), LocalTime.of(10, 0), LocalTime.of(11, 0), LocalTime.of(13, 0));
+        assertThat(available).doesNotContain(LocalTime.of(9, 0), LocalTime.of(12, 0)).contains(
+            LocalTime.of(8, 0), LocalTime.of(10, 0), LocalTime.of(11, 0), LocalTime.of(13, 0));
     }
 
 
@@ -379,8 +379,7 @@ public class BookingServiceTest {
 
         List<Booking> result = bookingsService.getBookingsByMunicipality(municipality);
 
-        assertThat(result).isNotNull();
-        assertThat(result).isEmpty();
+        assertThat(result).isNotNull().isEmpty();
         verify(bookingRepository, times(1)).findByMunicipality(municipality);
     }
 
@@ -402,8 +401,7 @@ public class BookingServiceTest {
 
         List<Booking> result = bookingsService.getBookingsByDistrict("District");
 
-        assertThat(result).isNotNull();
-        assertThat(result).isNotEmpty();
+        assertThat(result).isNotNull().isNotEmpty();
         assertThat(result.size()).isEqualTo(1);
         assertThat(result.get(0).getDistrict()).isEqualTo("District");
         verify(bookingRepository, times(1)).findByDistrict("District");
@@ -417,8 +415,7 @@ public class BookingServiceTest {
 
         List<Booking> result = bookingsService.getBookingsByDistrict(district);
 
-        assertThat(result).isNotNull();
-        assertThat(result).isEmpty();
+        assertThat(result).isNotNull().isEmpty();
         verify(bookingRepository, times(1)).findByDistrict(district);
     }
 }
