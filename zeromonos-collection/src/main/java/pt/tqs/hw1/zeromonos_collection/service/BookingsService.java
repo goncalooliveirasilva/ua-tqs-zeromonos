@@ -92,16 +92,10 @@ public class BookingsService {
     }
 
     public Booking cancelBooking(Long id) {
-        Booking booking = getById(id);
-        State currentState = booking.getState();
-        if (!currentState.canTransitionTo(State.CANCELED)) {
-            log.warn("Booking cancelation rejected: invalid state transition");
-            throw new IllegalStateException("Invalid state transition: " + currentState + " to CANCELED");
-        }
-        booking.setState(State.CANCELED);
-
+        Booking b = getById(id);
+        Booking booking = updateState(id, State.CANCELED, b.getCreatedBy());
         log.info("Booking canceled for email={}", booking.getCreatedBy());
-        return bookingRepository.save(booking);
+        return booking;
     }
 
     public List<Booking> getAllBookings() {

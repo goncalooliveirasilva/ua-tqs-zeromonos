@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import pt.tqs.hw1.zeromonos_collection.entity.Booking;
 import pt.tqs.hw1.zeromonos_collection.entity.BookingRequest;
 import pt.tqs.hw1.zeromonos_collection.entity.BookingStateHistory;
@@ -31,6 +32,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 @RestController
 @RequestMapping("/api/v1/bookings")
 @RequiredArgsConstructor
+@Slf4j
 public class BookingsController {
     
     private final BookingsService bookingsService;
@@ -38,9 +40,13 @@ public class BookingsController {
     @GetMapping("/public/{token}")
     public ResponseEntity<Booking> getBookingByToken(@PathVariable String token) {
         Optional<Booking> booking = bookingsService.getByToken(token);
+
         if (booking.isEmpty()) {
+            log.info("GET booking by token not found for token={}", token);
             return ResponseEntity.notFound().build();
         }
+
+        log.info("GET booking by token for token={}", token);
         return ResponseEntity.ok(booking.get());
     }
 
@@ -49,6 +55,8 @@ public class BookingsController {
     public ResponseEntity<Booking> createBooking(@RequestBody BookingRequest request, Authentication authentication) {
         String userEmail = authentication.getName();
         Booking booking = bookingsService.createBooking(request, userEmail);
+
+        log.info("POST create a booking for email={}", userEmail);
         return ResponseEntity.status(HttpStatus.CREATED).body(booking);
     }
 
@@ -57,6 +65,8 @@ public class BookingsController {
     public ResponseEntity<List<Booking>> getAllBookingsForCitizen(Authentication authentication) {
         String userEmail = authentication.getName();
         List<Booking> bookings = bookingsService.getBookingsByCitizen(userEmail);
+
+        log.info("GET bookings for citizen={}", userEmail);
         return ResponseEntity.ok(bookings);
     }
 
@@ -64,12 +74,16 @@ public class BookingsController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Booking> cancelBooking(@PathVariable Long id) {
         Booking canceled = bookingsService.cancelBooking(id);
+
+        log.info("DELETE cancel booking={}", id);
         return ResponseEntity.ok(canceled);
     }
 
     @PreAuthorize("hasRole('STAFF')")
     @GetMapping
     public ResponseEntity<List<Booking>> getAllBookings() {
+
+        log.info("GET all bookings");
         return ResponseEntity.ok(bookingsService.getAllBookings());
     }
 
@@ -78,6 +92,8 @@ public class BookingsController {
     @GetMapping("/{id}")
     public ResponseEntity<Booking> getBookingDetails(@PathVariable Long id) {
         Booking booking = bookingsService.getById(id);
+
+        log.info("GET details for booking={}", id);
         return ResponseEntity.ok(booking);
     }
 
@@ -86,12 +102,15 @@ public class BookingsController {
     public ResponseEntity<Booking> updateBookingState(@PathVariable Long id, @RequestBody BookingStateUpdateRequest request, Authentication authentication) {
         String userEmail = authentication.getName();
         Booking updated = bookingsService.updateState(id, request.getState(), userEmail);
+
+        log.info("PUT update state for booking={} for email={}", userEmail);
         return ResponseEntity.ok(updated);
     }
 
     @PreAuthorize("hasRole('CITIZEN') or hasRole('STAFF')")
     @GetMapping("/{id}/history")
     public ResponseEntity<List<BookingStateHistory>> getBookingHistory(@PathVariable Long id) {
+        log.info("GET history for booking={}", id);
         return ResponseEntity.ok(bookingsService.getHistoryForBooking(id));
     }
 
@@ -102,6 +121,7 @@ public class BookingsController {
         @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
     ) {
         List<LocalTime> available = bookingsService.getAvailableTimes(municipality, date);
+        log.info("GET available times for municipality={} and date={}", municipality, date);
         return ResponseEntity.ok(available);
     }
 
@@ -109,6 +129,7 @@ public class BookingsController {
     @GetMapping("/municipality/{municipality}")
     public ResponseEntity<List<Booking>> getBookingsByMunicipality(@PathVariable String municipality) {
         List<Booking> bookings = bookingsService.getBookingsByMunicipality(municipality);
+        log.info("GET bookings for municipality={}", municipality);
         return ResponseEntity.ok(bookings);
     }
 
@@ -116,6 +137,7 @@ public class BookingsController {
     @GetMapping("/district/{district}")
     public ResponseEntity<List<Booking>> getBookingsByDistrict(@PathVariable String district) {
         List<Booking> bookings = bookingsService.getBookingsByDistrict(district);
+        log.info("GET bookings for district={}", district);
         return ResponseEntity.ok(bookings);
     }
 }
