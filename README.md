@@ -37,6 +37,8 @@ The system follows a clean **frontend-backend separation**:
 | **CI/CD**    | GitHub Actions                  |
 | **QA Tools** | SonarQube, Lighthouse           |
 
+## API
+
 | **Endpoint**                                       | **Access Level** | **Description**                                   |
 | -------------------------------------------------- | ---------------- | ------------------------------------------------- |
 | `POST /api/v1/auth/register`                       | Public           | Register a new user                               |
