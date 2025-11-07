@@ -82,14 +82,14 @@ The full documentation and analysis of this project can be found in [report.pdf]
 
 ## Screenshots
 
-![image-1](./docs/image-2.png)
+![image-1](./docs/screenshots/image-2.png)
 
-![image-2](./docs/image-3.png)
+![image-2](./docs/screenshots/image-3.png)
 
-![image-3](./docs/image.png)
+![image-3](./docs/screenshots/image.png)
 
-![image-4](./docs/image-1.png)
+![image-4](./docs/screenshots/image-1.png)
 
-![image-5](./docs/image-4.png)
+![image-5](./docs/screenshots/image-4.png)
 
-![image-6](./docs/image-5.png)
+![image-6](./docs/screenshots/image-5.png)
