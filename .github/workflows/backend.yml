@@ -21,7 +21,7 @@ jobs:
           cache: maven
 
       - name: Run tests in HW1 folder
-        working-directory: HW1/zeromonos-collection
+        working-directory: zeromonos-collection
         run: mvn clean verify -B
         env:
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
